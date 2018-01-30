@@ -6,6 +6,11 @@ let config = require('./config')
 let nodemailer = require('./nodemailer')
 let curl = require('curlrequest');
 
+router.get("/", (req, res) => {
+  res.send('Welcome to landing page')
+})
+
+
 router.get("/ethdiff", (req, res)=> {
     let promiseArray = []
     //promiseArray.push(axios.get('https://cex.io/api/last_price/ETH/EUR'))
@@ -38,7 +43,7 @@ router.get("/ethdiff", (req, res)=> {
         finalResponse['koinexRevenue'] = finalResponse['coinFinalAmount'] * coinKoinexPrice
         finalResponse['profit'] = finalResponse['koinexRevenue'] - inputInr
 
-        nodemailer.sendEmail(`ETH Profit `+finalResponse['profit'], finalResponse)
+        nodemailer.sendEmail(finalResponse)
         res.send(finalResponse)
     }, error => {
         res.send('error')
@@ -52,6 +57,7 @@ router.get("/xrpdiff", (req, res)=> {
     promiseArray.push(axios.get('https://cex.io/api/order_book/XRP/EUR/?depth=1'))
     promiseArray.push(axios.get('https://api.fixer.io/latest'))
     promiseArray.push(fetchKoinexRates())
+    //promiseArray.push(fetchCoinDeltaRates())
     Promise.all(promiseArray).then(response => {
 
         let finalResponse = {}
@@ -77,7 +83,7 @@ router.get("/xrpdiff", (req, res)=> {
         finalResponse['koinexRevenue'] = finalResponse['coinFinalAmount'] * coinKoinexPrice
         finalResponse['profit'] = finalResponse['koinexRevenue'] - inputInr
 
-        nodemailer.sendEmail(`XRP Profit `+finalResponse['profit'], finalResponse)
+        nodemailer.sendEmail(finalResponse)
         res.send(finalResponse)
     }, error => {
         res.send('error')
@@ -85,7 +91,7 @@ router.get("/xrpdiff", (req, res)=> {
 })
 
 
-function fetchKoinexRates(getKoinexResponse) {
+function fetchKoinexRates() {
     let options = {
       url : 'https://koinex.in/api/ticker',
       header : [
@@ -110,6 +116,36 @@ function fetchKoinexRates(getKoinexResponse) {
               reject(e)
             }
             resolve(prices)
+          });
+    })
+  }
+
+  function fetchCoinDeltaRates() {
+    let options = {
+      url : 'https://socket.coindelta.com/socket.io/?token=cryptomandi&EIO=3&transport=polling&t=M589mCY&sid=EWBM-31vOY7vDfwcJGbB',
+      header : [
+        {
+          'cookie': '__cfduid=dc28369c5cc7973d2345345ce8e6397af1514565028; __cfruid=428f752951f9f0b15a9c4a123cb98334e22e63c2-1516844081; cf_clearance=3cc7914a39dd2fd29df81e38c74d52bb59b56f91-1517329386-14400; _ga=GA1.2.1523478833.1514565033; _gid=GA1.2.1243518662.1517287659; _gat_gtag_UA_104406898_1=1; io=EWBM-31vOY7vDfwcJGbB'
+        }, {
+        'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.81 Safari/537.36'
+        }, {
+          'cache-control': 'max-age=0'
+        }
+      ]
+    }
+  
+    return new Promise((resolve, reject) => {
+        curl.request(options, function (err, data) {
+          console.log(data, err)
+            // let prices = {}
+            // try {
+            //   prices =JSON.parse(data).prices;
+            // }
+            // catch(e) {
+            //   console.log("Koinex cloudflare expection");
+            //   reject(e)
+            // }
+            resolve(data)
           });
     })
   }
