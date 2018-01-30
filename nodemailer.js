@@ -19,17 +19,19 @@ let emailObj =
     // setup email data with unicode symbols
     let mailOptions = {
         from: '"Neeraj Yadav" <neerajybkp3@gmail.com>', // sender address
-        to: 'neerajyadav022@gmail.com', // list of receivers
+        to: 'neerajyadav022@gmail.com, akshay.chunu@gmail.com', // list of receivers
         subject: text, // Subject line
         text: JSON.stringify(priceObj), // plain text body
         html: `<table><thead><tr><th>Type</th><th>Value</th></tr></thead><tbody>
-        <tr><td>Input Inr</td><td>${priceObj.inputInr}</td></tr> 
-        <tr><td>Indian Bank Tax</td><td>${priceObj.indianBankTax}</td></tr>
-        <tr><td>Cex Tax in Eur</td><td>${priceObj.cexTaxEur}</td></tr> 
-        <tr><td>Cex Deposit Amount</td><td>${priceObj.cexInputEur}</td></tr>
-        <tr><td>Buy Request Fee</td><td>${priceObj.BuyRequestFee}</td></tr> 
+        <tr><td>Input (Inr)</td><td>${priceObj.inputInr}</td></tr> 
+        <tr><td>Indian Bank Tax (INR)</td><td>${priceObj.indianBankTax}</td></tr>
+        <tr><td>Cex Tax (EUR)</td><td>${priceObj.cexTaxEur}</td></tr> 
+        <tr><td>Cex Deposit Amount (EUR)</td><td>${priceObj.cexInputEur}</td></tr>
+        <tr><td>Buy Request Fee (EUR)</td><td>${priceObj.BuyRequestFee}</td></tr> 
         <tr><td>${priceObj.type} Bought</td><td>${priceObj.coinBought}</td></tr>
-        <tr><td>${priceObj.type} Final Amount in coindelta</td><td>${priceObj.coinFinalAmount}</td></tr>
+        <tr><td>${priceObj.type} Final Amount in koinex</td><td>${priceObj.coinFinalAmount}</td></tr>
+        <tr><td>Koinex Price (INR)</td><td>${priceObj.coinPriceKoinex}</td></tr>
+        <tr><td>Amount after selling on koinex (INR)</td><td>${priceObj.koinexRevenue}</td></tr>
         </tbody></table>`
     };
 

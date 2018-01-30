@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^0.17.1",
+    "curlrequest": "^1.0.1",
     "express": "^4.16.2",
     "nodemailer": "^4.4.2",
     "ws": "^4.0.0"
