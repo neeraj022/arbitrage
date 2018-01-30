@@ -169,6 +169,85 @@ router.get("/xrpdiff", (req, res)=> {
     })
 })
 
+router.get("/alldiff", (req, res)=> {
+  let promiseArray = []
+  //promiseArray.push(axios.get('https://cex.io/api/last_price/XRP/EUR'))
+  promiseArray.push(axios.get('https://api.fixer.io/latest'))
+  promiseArray.push(fetchKoinexRates())
+  promiseArray.push(axios.get('https://cex.io/api/order_book/ETH/EUR/?depth=1'))
+  promiseArray.push(axios.get('https://cex.io/api/order_book/XRP/EUR/?depth=1'))
+  promiseArray.push(axios.get('https://cex.io/api/order_book/BTC/EUR/?depth=1'))
+  promiseArray.push(axios.get('https://cex.io/api/order_book/BCH/EUR/?depth=1'))
+  //promiseArray.push(fetchCoinDeltaRates())
+  Promise.all(promiseArray).then(response => {
+
+      let finalResponse = {}
+      let inputInr = req.query.inputinr? req.query.inputinr: config.defaultInput
+      let indianBankTax = config.indianBankTax
+      let cexTax = config.cexTax
+      let euroPriceInInr = response[0].data.rates.INR
+
+      let ethCexPrice = response[2].data.asks[0][0]
+      let ethTransferFee = config.ethTransferFee
+      let ethKoinexPrice = response[1].ETH
+
+      let xrpCexPrice = response[3].data.asks[0][0]
+      let xrpTransferFee = config.xrpTransferFee
+      let xrpKoinexPrice = response[1].XRP
+
+      let btcCexPrice = response[4].data.asks[0][0]
+      let btcTransferFee = config.btcTransferFee
+      let btcKoinexPrice = response[1].BTC
+
+      let bchCexPrice = response[5].data.asks[0][0]
+      let bchTransferFee = config.bchTransferFee
+      let bchKoinexPrice = response[1].BCH
+
+      finalResponse['type']= 'ALL'
+      finalResponse['inputInr'] = inputInr
+      finalResponse['indianBankTax'] = inputInr * indianBankTax
+      finalResponse['inputCexRawInr'] = inputInr - finalResponse['indianBankTax']
+      finalResponse['inputCexRawEur'] = finalResponse['inputCexRawInr']/euroPriceInInr
+      finalResponse['cexTaxEur'] = finalResponse['inputCexRawEur']* cexTax
+      finalResponse['cexInputEur'] = finalResponse['inputCexRawEur'] - finalResponse['cexTaxEur']
+      finalResponse['BuyRequestFee'] = finalResponse['cexInputEur'] * config.makerFeeCex
+
+      finalResponse['ETH'] = {}
+      finalResponse['ETH']['coinBought'] = (finalResponse['cexInputEur'] - finalResponse['BuyRequestFee'])/ethCexPrice
+      finalResponse['ETH']['coinFinalAmount'] = finalResponse['ETH']['coinBought'] - ethTransferFee
+      finalResponse['ETH']['coinPriceKoinex'] = ethKoinexPrice
+      finalResponse['ETH']['koinexRevenue'] = finalResponse['ETH']['coinFinalAmount'] * ethKoinexPrice
+      finalResponse['ETH']['profit'] = finalResponse['ETH']['koinexRevenue'] - inputInr
+
+      finalResponse['XRP'] = {}
+      finalResponse['XRP']['coinBought'] = (finalResponse['cexInputEur'] - finalResponse['BuyRequestFee'])/xrpCexPrice
+      finalResponse['XRP']['coinFinalAmount'] = finalResponse['XRP']['coinBought'] - xrpTransferFee
+      finalResponse['XRP']['coinPriceKoinex'] = xrpKoinexPrice
+      finalResponse['XRP']['koinexRevenue'] = finalResponse['XRP']['coinFinalAmount'] * xrpKoinexPrice
+      finalResponse['XRP']['profit'] = finalResponse['XRP']['koinexRevenue'] - inputInr
+
+      finalResponse['BTC'] = {}
+      finalResponse['BTC']['coinBought'] = (finalResponse['cexInputEur'] - finalResponse['BuyRequestFee'])/btcCexPrice
+      finalResponse['BTC']['coinFinalAmount'] = finalResponse['BTC']['coinBought'] - btcTransferFee
+      finalResponse['BTC']['coinPriceKoinex'] = btcKoinexPrice
+      finalResponse['BTC']['koinexRevenue'] = finalResponse['BTC']['coinFinalAmount'] * btcKoinexPrice
+      finalResponse['BTC']['profit'] = finalResponse['BTC']['koinexRevenue'] - inputInr
+
+      finalResponse['BCH'] = {}
+      finalResponse['BCH']['coinBought'] = (finalResponse['cexInputEur'] - finalResponse['BuyRequestFee'])/bchCexPrice
+      finalResponse['BCH']['coinFinalAmount'] = finalResponse['BCH']['coinBought'] - bchTransferFee
+      finalResponse['BCH']['coinPriceKoinex'] = bchKoinexPrice
+      finalResponse['BCH']['koinexRevenue'] = finalResponse['BCH']['coinFinalAmount'] * bchKoinexPrice
+      finalResponse['BCH']['profit'] = finalResponse['BCH']['koinexRevenue'] - inputInr
+
+      calculateMaximumProfit(finalResponse)
+      nodemailer.sendEmailAll(finalResponse)
+      res.send(finalResponse)
+  }, error => {
+      res.send('error')
+  })
+})
+
 
 function fetchKoinexRates() {
     let options = {
@@ -197,6 +276,26 @@ function fetchKoinexRates() {
             resolve(prices)
           });
     })
+  }
+  function calculateMaximumProfit (finalResponse) {
+    let maxProfit = finalResponse.ETH.profit
+    let maxProfitCoin = 'ETH'
+    if (finalResponse.XRP.profit > maxProfit) {
+      maxProfit = finalResponse.XRP.profit
+      maxProfitCoin = 'XRP'
+    }
+    if (finalResponse.BTC.profit > maxProfit) {
+      maxProfit = finalResponse.BTC.profit
+      maxProfitCoin = 'BTC'
+    }
+    if (finalResponse.BCH.profit > maxProfit) {
+      maxProfit = finalResponse.BCH.profit
+      maxProfitCoin = 'BCH'
+    }
+    finalResponse ['maxProfitCoin'] = maxProfitCoin
+    finalResponse ['maxProfit'] = maxProfit
+    console.log(maxProfit, maxProfitCoin)
+    return 
   }
 
   function fetchCoinDeltaRates() {
