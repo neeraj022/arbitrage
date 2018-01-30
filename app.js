@@ -3,5 +3,5 @@ const app = express()
 const router = require('./router')
 
 app.use(router)
-
-app.listen(7000, () => console.log('Example app listening on port 7000!'))
+ let port = 7000
+app.listen(port, () => console.log(`Price App listening on port ${port}!`))
