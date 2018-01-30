@@ -25,7 +25,7 @@ router.get("/ethdiff", (req, res)=> {
         let cexTax = config.cexTax
         let euroPriceInInr = response[1].data.rates.INR
         //let etherPrice = response[0].data.lprice
-        let etherPrice = response[0].data.asks[0][0]
+        let coinCexPrice = response[0].data.asks[0][0]
         let etherTransferFee = config.ethTransferFee
         let coinKoinexPrice = response[2].ETH
 
@@ -37,7 +37,7 @@ router.get("/ethdiff", (req, res)=> {
         finalResponse['cexTaxEur'] = finalResponse['inputCexRawEur']* cexTax
         finalResponse['cexInputEur'] = finalResponse['inputCexRawEur'] - finalResponse['cexTaxEur']
         finalResponse['BuyRequestFee'] = finalResponse['cexInputEur'] * config.makerFeeCex
-        finalResponse['coinBought'] = (finalResponse['cexInputEur'] - finalResponse['BuyRequestFee'])/etherPrice
+        finalResponse['coinBought'] = (finalResponse['cexInputEur'] - finalResponse['BuyRequestFee'])/coinCexPrice
         finalResponse['coinFinalAmount'] = finalResponse['coinBought'] - etherTransferFee
         finalResponse['coinPriceKoinex'] = coinKoinexPrice
         finalResponse['koinexRevenue'] = finalResponse['coinFinalAmount'] * coinKoinexPrice
@@ -48,6 +48,85 @@ router.get("/ethdiff", (req, res)=> {
     }, error => {
         res.send('error')
     })
+})
+
+router.get("/btcdiff", (req, res)=> {
+  let promiseArray = []
+  //promiseArray.push(axios.get('https://cex.io/api/last_price/ETH/EUR'))
+  promiseArray.push(axios.get('https://cex.io/api/order_book/BTC/EUR/?depth=1'))
+  promiseArray.push(axios.get('https://api.fixer.io/latest'))
+  promiseArray.push(fetchKoinexRates())
+  Promise.all(promiseArray).then(response => {
+
+      let finalResponse = {}
+      let inputInr = req.query.inputinr? req.query.inputinr: config.defaultInput
+      let indianBankTax = config.indianBankTax
+      let cexTax = config.cexTax
+      let euroPriceInInr = response[1].data.rates.INR
+      //let etherPrice = response[0].data.lprice
+      let coinCexPrice = response[0].data.asks[0][0]
+      let btcTransferFee = config.btcTransferFee
+      let coinKoinexPrice = response[2].BTC
+
+      finalResponse['type'] = 'BTC'
+      finalResponse['inputInr'] = inputInr
+      finalResponse['indianBankTax'] = inputInr * indianBankTax
+      finalResponse['inputCexRawInr'] = inputInr - finalResponse['indianBankTax']
+      finalResponse['inputCexRawEur'] = finalResponse['inputCexRawInr']/euroPriceInInr
+      finalResponse['cexTaxEur'] = finalResponse['inputCexRawEur']* cexTax
+      finalResponse['cexInputEur'] = finalResponse['inputCexRawEur'] - finalResponse['cexTaxEur']
+      finalResponse['BuyRequestFee'] = finalResponse['cexInputEur'] * config.makerFeeCex
+      finalResponse['coinBought'] = (finalResponse['cexInputEur'] - finalResponse['BuyRequestFee'])/coinCexPrice
+      finalResponse['coinFinalAmount'] = finalResponse['coinBought'] - btcTransferFee
+      finalResponse['coinPriceKoinex'] = coinKoinexPrice
+      finalResponse['koinexRevenue'] = finalResponse['coinFinalAmount'] * coinKoinexPrice
+      finalResponse['profit'] = finalResponse['koinexRevenue'] - inputInr
+
+      nodemailer.sendEmail(finalResponse)
+      res.send(finalResponse)
+  }, error => {
+      res.send('error')
+  })
+})
+
+
+router.get("/bchdiff", (req, res)=> {
+  let promiseArray = []
+  //promiseArray.push(axios.get('https://cex.io/api/last_price/ETH/EUR'))
+  promiseArray.push(axios.get('https://cex.io/api/order_book/BCH/EUR/?depth=1'))
+  promiseArray.push(axios.get('https://api.fixer.io/latest'))
+  promiseArray.push(fetchKoinexRates())
+  Promise.all(promiseArray).then(response => {
+
+      let finalResponse = {}
+      let inputInr = req.query.inputinr? req.query.inputinr: config.defaultInput
+      let indianBankTax = config.indianBankTax
+      let cexTax = config.cexTax
+      let euroPriceInInr = response[1].data.rates.INR
+      //let etherPrice = response[0].data.lprice
+      let coinCexPrice = response[0].data.asks[0][0]
+      let bchTransferFee = config.bchTransferFee
+      let coinKoinexPrice = response[2].BCH
+
+      finalResponse['type'] = 'BCH'
+      finalResponse['inputInr'] = inputInr
+      finalResponse['indianBankTax'] = inputInr * indianBankTax
+      finalResponse['inputCexRawInr'] = inputInr - finalResponse['indianBankTax']
+      finalResponse['inputCexRawEur'] = finalResponse['inputCexRawInr']/euroPriceInInr
+      finalResponse['cexTaxEur'] = finalResponse['inputCexRawEur']* cexTax
+      finalResponse['cexInputEur'] = finalResponse['inputCexRawEur'] - finalResponse['cexTaxEur']
+      finalResponse['BuyRequestFee'] = finalResponse['cexInputEur'] * config.makerFeeCex
+      finalResponse['coinBought'] = (finalResponse['cexInputEur'] - finalResponse['BuyRequestFee'])/coinCexPrice
+      finalResponse['coinFinalAmount'] = finalResponse['coinBought'] - bchTransferFee
+      finalResponse['coinPriceKoinex'] = coinKoinexPrice
+      finalResponse['koinexRevenue'] = finalResponse['coinFinalAmount'] * coinKoinexPrice
+      finalResponse['profit'] = finalResponse['koinexRevenue'] - inputInr
+
+      nodemailer.sendEmail(finalResponse)
+      res.send(finalResponse)
+  }, error => {
+      res.send('error')
+  })
 })
 
 
@@ -65,7 +144,7 @@ router.get("/xrpdiff", (req, res)=> {
         let indianBankTax = config.indianBankTax
         let cexTax = config.cexTax
         let euroPriceInInr = response[1].data.rates.INR
-        let xrpPrice = response[0].data.asks[0][0]
+        let coinCexPrice = response[0].data.asks[0][0]
         let xrpTransferFee = config.xrpTransferFee
         let coinKoinexPrice = response[2].XRP
 
@@ -77,7 +156,7 @@ router.get("/xrpdiff", (req, res)=> {
         finalResponse['cexTaxEur'] = finalResponse['inputCexRawEur']* cexTax
         finalResponse['cexInputEur'] = finalResponse['inputCexRawEur'] - finalResponse['cexTaxEur']
         finalResponse['BuyRequestFee'] = finalResponse['cexInputEur'] * config.makerFeeCex
-        finalResponse['coinBought'] = (finalResponse['cexInputEur'] - finalResponse['BuyRequestFee'])/xrpPrice
+        finalResponse['coinBought'] = (finalResponse['cexInputEur'] - finalResponse['BuyRequestFee'])/coinCexPrice
         finalResponse['coinFinalAmount'] = finalResponse['coinBought'] - xrpTransferFee
         finalResponse['coinPriceKoinex'] = coinKoinexPrice
         finalResponse['koinexRevenue'] = finalResponse['coinFinalAmount'] * coinKoinexPrice
