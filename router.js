@@ -242,6 +242,7 @@ router.get("/alldiff", (req, res)=> {
       finalResponse['BCH']['profit'] = finalResponse['BCH']['koinexRevenue'] - inputInr
 
       calculateMaximumProfit(finalResponse)
+      console.log(new Date(), 'maximum profit is' , finalResponse.maxProfitCoin, finalResponse.maxProfit)
       if (finalResponse.maxProfit>=config.maxProfitThreshold) {
         sms.sendSms('MAXIMUM Profit on '+ finalResponse.maxProfitCoin + ' '+ finalResponse.maxProfit)
         nodemailer.sendEmailAll(finalResponse)
@@ -274,7 +275,7 @@ function fetchKoinexRates() {
               prices =JSON.parse(data).prices;
             }
             catch(e) {
-              console.log("Koinex cloudflare expection");
+              console.log(new Date(),"Koinex cloudflare expection");
               reject(e)
             }
             resolve(prices)
