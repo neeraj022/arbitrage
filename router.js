@@ -3,6 +3,7 @@ var axios = require('axios')
 var router = express.Router();
 const WebSocket = require('ws');
 let config = require('./config')
+let sms = require('./sms')
 let nodemailer = require('./nodemailer')
 let curl = require('curlrequest');
 
@@ -241,7 +242,10 @@ router.get("/alldiff", (req, res)=> {
       finalResponse['BCH']['profit'] = finalResponse['BCH']['koinexRevenue'] - inputInr
 
       calculateMaximumProfit(finalResponse)
-      nodemailer.sendEmailAll(finalResponse)
+      if (finalResponse.maxProfit>=config.maxProfitThreshold) {
+        sms.sendSms('MAXIMUM Profit on '+ finalResponse.maxProfitCoin + ' '+ finalResponse.maxProfit)
+        nodemailer.sendEmailAll(finalResponse)
+      }
       res.send(finalResponse)
   }, error => {
       res.send('error')
@@ -294,7 +298,6 @@ function fetchKoinexRates() {
     }
     finalResponse ['maxProfitCoin'] = maxProfitCoin
     finalResponse ['maxProfit'] = maxProfit
-    console.log(maxProfit, maxProfitCoin)
     return 
   }
 
