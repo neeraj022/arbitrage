@@ -244,8 +244,84 @@ router.get("/alldiff", (req, res)=> {
       calculateMaximumProfit(finalResponse)
       console.log(new Date(), 'maximum profit is' , finalResponse.maxProfitCoin, finalResponse.maxProfit)
       if (finalResponse.maxProfit>=config.maxProfitThreshold) {
-        sms.sendSms('MAXIMUM Profit on '+ finalResponse.maxProfitCoin + ' '+ finalResponse.maxProfit)
+        //sms.sendSms('MAXIMUM Profit on '+ finalResponse.maxProfitCoin + ' '+ finalResponse.maxProfit)
         nodemailer.sendEmailAll(finalResponse)
+      }
+      res.send(finalResponse)
+  }, error => {
+      res.send('error')
+  })
+})
+
+
+router.get("/favourablecextransfer", (req, res)=> {
+  let promiseArray = []
+  promiseArray.push(axios.get('https://api.fixer.io/latest'))
+  promiseArray.push(fetchKoinexRates())
+  promiseArray.push(axios.get('https://cex.io/api/order_book/ETH/EUR/?depth=1'))
+  promiseArray.push(axios.get('https://cex.io/api/order_book/XRP/EUR/?depth=1'))
+  promiseArray.push(axios.get('https://cex.io/api/order_book/BTC/EUR/?depth=1'))
+  promiseArray.push(axios.get('https://cex.io/api/order_book/BCH/EUR/?depth=1'))
+  Promise.all(promiseArray).then(response => {
+
+      let finalResponse = {}
+      let inputInr = req.query.inputinr? req.query.inputinr: config.defaultInput
+      let indianBankTax = config.indianBankTax
+      let cexTax = config.cexTax
+      let euroPriceInInr = response[0].data.rates.INR
+
+      let ethCexPrice = response[2].data.bids[0][0]
+      let ethTransferFee = config.ethTransferFee
+      let ethKoinexPrice = response[1].ETH
+
+      let xrpCexPrice = response[3].data.bids[0][0]
+      let xrpTransferFee = config.xrpTransferFee
+      let xrpKoinexPrice = response[1].XRP
+
+      let btcCexPrice = response[4].data.bids[0][0]
+      let btcTransferFee = config.btcTransferFee
+      let btcKoinexPrice = response[1].BTC
+
+      let bchCexPrice = response[5].data.bids[0][0]
+      let bchTransferFee = config.bchTransferFee
+      let bchKoinexPrice = response[1].BCH
+
+      finalResponse['indianBankTax'] = inputInr * indianBankTax
+      finalResponse['inputCexRawInr'] = inputInr - finalResponse['indianBankTax']
+      finalResponse['inputCexRawEur'] = finalResponse['inputCexRawInr']/euroPriceInInr
+      finalResponse['cexTaxEur'] = finalResponse['inputCexRawEur']* cexTax
+      finalResponse['cexInputEur'] = finalResponse['inputCexRawEur'] - finalResponse['cexTaxEur']
+
+      finalResponse['type']= 'ALL'
+      finalResponse['inputInr'] = inputInr
+      finalResponse['BuyRequestFee'] = finalResponse['inputInr'] * config.makerFeeCex
+      finalResponse['AvailableInr'] = finalResponse['inputInr'] - finalResponse['BuyRequestFee']
+
+      finalResponse['ETH'] = {}
+      finalResponse['ETH']['coinBought'] = (finalResponse['AvailableInr'])/ethKoinexPrice
+      finalResponse['ETH']['coinFinalAmount'] = finalResponse['ETH']['coinBought'] - ethTransferFee
+      finalResponse['ETH']['amountOnCex'] = finalResponse['ETH']['coinFinalAmount'] * ethCexPrice
+
+      finalResponse['XRP'] = {}
+      finalResponse['XRP']['coinBought'] = (finalResponse['AvailableInr'])/xrpKoinexPrice
+      finalResponse['XRP']['coinFinalAmount'] = finalResponse['XRP']['coinBought'] - xrpTransferFee
+      finalResponse['XRP']['amountOnCex'] = finalResponse['XRP']['coinFinalAmount'] * xrpCexPrice
+
+      finalResponse['BTC'] = {}
+      finalResponse['BTC']['coinBought'] = (finalResponse['AvailableInr'])/btcKoinexPrice
+      finalResponse['BTC']['coinFinalAmount'] = finalResponse['BTC']['coinBought'] - btcTransferFee
+      finalResponse['BTC']['amountOnCex'] = finalResponse['BTC']['coinFinalAmount'] * btcCexPrice
+
+      finalResponse['BCH'] = {}
+      finalResponse['BCH']['coinBought'] = (finalResponse['AvailableInr'])/bchKoinexPrice
+      finalResponse['BCH']['coinFinalAmount'] = finalResponse['BCH']['coinBought'] - bchTransferFee
+      finalResponse['BCH']['amountOnCex'] = finalResponse['BCH']['coinFinalAmount'] * bchCexPrice
+
+      calculateMaxCexAmount(finalResponse)
+      console.log(new Date(), 'maximum amount is' , finalResponse.maxAmountCexCoin, finalResponse.maxAmountCex,'bank transfer price is', finalResponse['cexInputEur'])
+      if (finalResponse.maxAmountCex>=finalResponse['cexInputEur']) {
+        //sms.sendSms('MAXIMUM Profit on '+ finalResponse.maxProfitCoin + ' '+ finalResponse.maxProfit)
+        nodemailer.sendEmailReverseTransfer(finalResponse)
       }
       res.send(finalResponse)
   }, error => {
@@ -282,6 +358,26 @@ function fetchKoinexRates() {
           });
     })
   }
+  function calculateMaxCexAmount (finalResponse) {
+    let maxAmount = finalResponse.ETH.amountOnCex
+    let maxAmountCoin = 'ETH'
+    if (finalResponse.XRP.amountOnCex > maxAmount) {
+      maxAmount = finalResponse.XRP.amountOnCex
+      maxAmountCoin = 'XRP'
+    }
+    if (finalResponse.BTC.amountOnCex > maxAmount) {
+      maxAmount = finalResponse.BTC.amountOnCex
+      maxAmountCoin = 'BTC'
+    }
+    if (finalResponse.BCH.amountOnCex > maxAmount) {
+      maxAmount = finalResponse.BCH.amountOnCex
+      maxAmountCoin = 'BCH'
+    }
+    finalResponse ['maxAmountCexCoin'] = maxAmountCoin
+    finalResponse ['maxAmountCex'] = maxAmount
+    return 
+  }
+
   function calculateMaximumProfit (finalResponse) {
     let maxProfit = finalResponse.ETH.profit
     let maxProfitCoin = 'ETH'
@@ -289,11 +385,11 @@ function fetchKoinexRates() {
       maxProfit = finalResponse.XRP.profit
       maxProfitCoin = 'XRP'
     }
-    if (finalResponse.BTC.profit > maxProfit) {
+    if (finalResponse.BTC.profit < maxProfit) {
       maxProfit = finalResponse.BTC.profit
       maxProfitCoin = 'BTC'
     }
-    if (finalResponse.BCH.profit > maxProfit) {
+    if (finalResponse.BCH.profit < maxProfit) {
       maxProfit = finalResponse.BCH.profit
       maxProfitCoin = 'BCH'
     }
