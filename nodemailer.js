@@ -468,6 +468,15 @@ sendEmailReverseTransfer (priceObj) {
                 <td>Cex Deposit Amount (EUR)</td>
                 <td>${util.to2DecimalPlaces(priceObj.cexInputEur)}</td>
             </tr>
+            <tr>
+                <td>Koinex Deposit Fee (INR)</td>
+                <td>${util.to2DecimalPlaces(priceObj.koinexDepositFee)}</td>
+            </tr>
+            <tr>
+                <td>Koinex Available Money (INR)</td>
+                <td>${util.to2DecimalPlaces(priceObj.AvailableInr)}</td>
+            </tr>
+            
         </tbody>
         </table>
         </div>

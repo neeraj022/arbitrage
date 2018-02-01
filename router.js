@@ -294,8 +294,9 @@ router.get("/favourablecextransfer", (req, res)=> {
 
       finalResponse['type']= 'ALL'
       finalResponse['inputInr'] = inputInr
-      finalResponse['BuyRequestFee'] = finalResponse['inputInr'] * config.makerFeeCex
-      finalResponse['AvailableInr'] = finalResponse['inputInr'] - finalResponse['BuyRequestFee']
+      finalResponse['koinexDepositFee'] = inputInr * config.koinexDepositFee
+      finalResponse['BuyRequestFee'] = (finalResponse['inputInr'] - finalResponse['koinexDepositFee']) * config.makerFeeCex
+      finalResponse['AvailableInr'] = (finalResponse['inputInr'] - finalResponse['koinexDepositFee'] - finalResponse['BuyRequestFee'])
 
       finalResponse['ETH'] = {}
       finalResponse['ETH']['coinBought'] = (finalResponse['AvailableInr'])/ethKoinexPrice

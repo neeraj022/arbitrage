@@ -6,6 +6,7 @@ let config = {
     btcTransferFee: 0.0001,
     cexTax: 0.035,
     indianBankTax: 0.035 * 1.18,
+    koinexDepositFee: 2/100,
     makerFeeCex: 0.0016,
     takerFeeCex: 0.0025,
     maxProfitThreshold: 7000,
