@@ -1,4 +1,6 @@
 let curl = require('curlrequest');
+const NodeCache = require( "node-cache" );
+const myCache = new NodeCache( { stdTTL: 1800, checkperiod: 120 } );
 
 let utilMethods = {
     to2DecimalPlaces (value) {
@@ -36,7 +38,12 @@ let utilMethods = {
         }
       
         return new Promise((resolve, reject) => {
-            curl.request(options, function (err, data) {
+            koinexPrices = myCache.get( "koinexPrices" )
+            if (koinexPrices) {
+              console.log('cache found')
+              resolve (koinexPrices)
+            } else {
+              curl.request(options, function (err, data) {
                 let prices = {}
                 try {
                   prices =JSON.parse(data).prices;
@@ -45,8 +52,11 @@ let utilMethods = {
                   console.log(new Date(),"Koinex cloudflare expection");
                   reject(e)
                 }
+                console.log('setting cache')
+                myCache.set("koinexPrices", prices)
                 resolve(prices)
               });
+            }
         })
       },
     fetchCoinDeltaRates() {

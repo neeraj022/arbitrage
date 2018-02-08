@@ -334,8 +334,8 @@ router.get("/favourablecextransfer", (req, res)=> {
 router.get("/initialDifferenceData", (req, res)=> {
   let promiseArray = []
   promiseArray.push(axios.get('https://api.fixer.io/latest'))
-  //promiseArray.push(util.fetchKoinexRates())
-  promiseArray.push(axios.get('https://koinex.in/api/ticker'))
+  promiseArray.push(util.fetchKoinexRates())
+  //promiseArray.push(axios.get('https://koinex.in/api/ticker'))
   promiseArray.push(axios.get('https://cex.io/api/order_book/ETH/EUR/?depth=1'))
   promiseArray.push(axios.get('https://cex.io/api/order_book/XRP/EUR/?depth=1'))
   promiseArray.push(axios.get('https://cex.io/api/order_book/BTC/EUR/?depth=1'))
@@ -353,7 +353,7 @@ router.get("/initialDifferenceData", (req, res)=> {
       indianMoney['euroToInr'] = euroPriceInInr
 
       let koinexTicker = {}
-      koinexTicker = response[1].data.prices
+      koinexTicker = response[1]
       
       let ethTicker = {}
       ethTicker['coinCexPrice'] = response[2].data.asks[0][0]
@@ -380,7 +380,7 @@ router.get("/initialDifferenceData", (req, res)=> {
 
       res.send(finalResponse)
   }, error => {
-      res.send('error')
+      res.send(error)
   })
 })
 
