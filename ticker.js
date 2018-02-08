@@ -21,10 +21,11 @@ let tickerFunctions = {
     },
     koinexTicker (ws) {
         let promiseArray = []
-        promiseArray.push(util.fetchKoinexRates())
+        //promiseArray.push(util.fetchKoinexRates())
+        promiseArray.push(axios.get('https://koinex.in/api/ticker'))
         Promise.all(promiseArray).then(response => {
             let finalResponse = {}
-            finalResponse['koinexPrices'] = response[0].koinexPrices
+            finalResponse['koinexPrices'] = response[0].data.prices
             ws.emit('koinexTicker', finalResponse)
         })
     },
