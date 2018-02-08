@@ -6,12 +6,13 @@ let util = require('./util')
 let tickerFunctions = {
     indianMoney (ws) {
         let promiseArray = []
-        promiseArray.push(axios.get('https://api.fixer.io/latest'))
+        //promiseArray.push(axios.get('https://api.fixer.io/latest'))
+        promiseArray.push(util.fetchCurrencyRates())
         Promise.all(promiseArray).then(response => {
             let finalResponse = {}
             let indianBankTax = config.indianBankTax
             let cexTax = config.cexTax
-            let euroPriceInInr = response[0].data.rates.INR
+            let euroPriceInInr = response[0].rates.INR
             finalResponse['indianBankTax'] = indianBankTax
             finalResponse['cexTax'] = cexTax
             finalResponse['makerFeeCex'] = config.makerFeeCex

@@ -16,7 +16,8 @@ router.get("/ethdiff", (req, res)=> {
     let promiseArray = []
     //promiseArray.push(axios.get('https://cex.io/api/last_price/ETH/EUR'))
     promiseArray.push(axios.get('https://cex.io/api/order_book/ETH/EUR/?depth=1'))
-    promiseArray.push(axios.get('https://api.fixer.io/latest'))
+    // promiseArray.push(axios.get('https://api.fixer.io/latest'))
+    promiseArray.push(util.fetchCurrencyRates())
     promiseArray.push(util.fetchKoinexRates())
     Promise.all(promiseArray).then(response => {
 
@@ -24,7 +25,7 @@ router.get("/ethdiff", (req, res)=> {
         let inputInr = req.query.inputinr? req.query.inputinr: config.defaultInput
         let indianBankTax = config.indianBankTax
         let cexTax = config.cexTax
-        let euroPriceInInr = response[1].data.rates.INR
+        let euroPriceInInr = response[1].rates.INR
         //let etherPrice = response[0].data.lprice
         let coinCexPrice = response[0].data.asks[0][0]
         let etherTransferFee = config.ethTransferFee
@@ -55,7 +56,8 @@ router.get("/btcdiff", (req, res)=> {
   let promiseArray = []
   //promiseArray.push(axios.get('https://cex.io/api/last_price/ETH/EUR'))
   promiseArray.push(axios.get('https://cex.io/api/order_book/BTC/EUR/?depth=1'))
-  promiseArray.push(axios.get('https://api.fixer.io/latest'))
+  //promiseArray.push(axios.get('https://api.fixer.io/latest'))
+  promiseArray.push(util.fetchCurrencyRates())
   promiseArray.push(util.fetchKoinexRates())
   Promise.all(promiseArray).then(response => {
 
@@ -63,7 +65,7 @@ router.get("/btcdiff", (req, res)=> {
       let inputInr = req.query.inputinr? req.query.inputinr: config.defaultInput
       let indianBankTax = config.indianBankTax
       let cexTax = config.cexTax
-      let euroPriceInInr = response[1].data.rates.INR
+      let euroPriceInInr = response[1].rates.INR
       //let etherPrice = response[0].data.lprice
       let coinCexPrice = response[0].data.asks[0][0]
       let btcTransferFee = config.btcTransferFee
@@ -95,7 +97,8 @@ router.get("/bchdiff", (req, res)=> {
   let promiseArray = []
   //promiseArray.push(axios.get('https://cex.io/api/last_price/ETH/EUR'))
   promiseArray.push(axios.get('https://cex.io/api/order_book/BCH/EUR/?depth=1'))
-  promiseArray.push(axios.get('https://api.fixer.io/latest'))
+  //promiseArray.push(axios.get('https://api.fixer.io/latest'))
+  promiseArray.push(util.fetchCurrencyRates())
   promiseArray.push(util.fetchKoinexRates())
   Promise.all(promiseArray).then(response => {
 
@@ -103,7 +106,7 @@ router.get("/bchdiff", (req, res)=> {
       let inputInr = req.query.inputinr? req.query.inputinr: config.defaultInput
       let indianBankTax = config.indianBankTax
       let cexTax = config.cexTax
-      let euroPriceInInr = response[1].data.rates.INR
+      let euroPriceInInr = response[1].rates.INR
       //let etherPrice = response[0].data.lprice
       let coinCexPrice = response[0].data.asks[0][0]
       let bchTransferFee = config.bchTransferFee
@@ -135,7 +138,8 @@ router.get("/xrpdiff", (req, res)=> {
     let promiseArray = []
     //promiseArray.push(axios.get('https://cex.io/api/last_price/XRP/EUR'))
     promiseArray.push(axios.get('https://cex.io/api/order_book/XRP/EUR/?depth=1'))
-    promiseArray.push(axios.get('https://api.fixer.io/latest'))
+    //promiseArray.push(axios.get('https://api.fixer.io/latest'))
+    promiseArray.push(util.fetchCurrencyRates())
     promiseArray.push(util.fetchKoinexRates())
     //promiseArray.push(fetchCoinDeltaRates())
     Promise.all(promiseArray).then(response => {
@@ -144,7 +148,7 @@ router.get("/xrpdiff", (req, res)=> {
         let inputInr = req.query.inputinr? req.query.inputinr: config.defaultInput
         let indianBankTax = config.indianBankTax
         let cexTax = config.cexTax
-        let euroPriceInInr = response[1].data.rates.INR
+        let euroPriceInInr = response[1].rates.INR
         let coinCexPrice = response[0].data.asks[0][0]
         let xrpTransferFee = config.xrpTransferFee
         let coinKoinexPrice = response[2].XRP
@@ -173,7 +177,8 @@ router.get("/xrpdiff", (req, res)=> {
 router.get("/alldiff", (req, res)=> {
   let promiseArray = []
   //promiseArray.push(axios.get('https://cex.io/api/last_price/XRP/EUR'))
-  promiseArray.push(axios.get('https://api.fixer.io/latest'))
+  //promiseArray.push(axios.get('https://api.fixer.io/latest'))
+  promiseArray.push(util.fetchCurrencyRates())
   promiseArray.push(util.fetchKoinexRates())
   promiseArray.push(axios.get('https://cex.io/api/order_book/ETH/EUR/?depth=1'))
   promiseArray.push(axios.get('https://cex.io/api/order_book/XRP/EUR/?depth=1'))
@@ -186,7 +191,7 @@ router.get("/alldiff", (req, res)=> {
       let inputInr = req.query.inputinr? req.query.inputinr: config.defaultInput
       let indianBankTax = config.indianBankTax
       let cexTax = config.cexTax
-      let euroPriceInInr = response[0].data.rates.INR
+      let euroPriceInInr = response[0].rates.INR
 
       let ethCexPrice = response[2].data.asks[0][0]
       let ethTransferFee = config.ethTransferFee
@@ -256,7 +261,8 @@ router.get("/alldiff", (req, res)=> {
 
 router.get("/favourablecextransfer", (req, res)=> {
   let promiseArray = []
-  promiseArray.push(axios.get('https://api.fixer.io/latest'))
+  //promiseArray.push(axios.get('https://api.fixer.io/latest'))
+  promiseArray.push(util.fetchCurrencyRates())
   promiseArray.push(util.fetchKoinexRates())
   promiseArray.push(axios.get('https://cex.io/api/order_book/ETH/EUR/?depth=1'))
   promiseArray.push(axios.get('https://cex.io/api/order_book/XRP/EUR/?depth=1'))
@@ -268,7 +274,7 @@ router.get("/favourablecextransfer", (req, res)=> {
       let inputInr = req.query.inputinr? req.query.inputinr: config.defaultInput
       let indianBankTax = config.indianBankTax
       let cexTax = config.cexTax
-      let euroPriceInInr = response[0].data.rates.INR
+      let euroPriceInInr = response[0].rates.INR
 
       let ethCexPrice = response[2].data.bids[0][0]
       let ethTransferFee = config.ethTransferFee
@@ -333,7 +339,8 @@ router.get("/favourablecextransfer", (req, res)=> {
 
 router.get("/initialDifferenceData", (req, res)=> {
   let promiseArray = []
-  promiseArray.push(axios.get('https://api.fixer.io/latest'))
+  //promiseArray.push(axios.get('https://api.fixer.io/latest'))
+  promiseArray.push(util.fetchCurrencyRates())
   promiseArray.push(util.fetchKoinexRates())
   //promiseArray.push(axios.get('https://koinex.in/api/ticker'))
   promiseArray.push(axios.get('https://cex.io/api/order_book/ETH/EUR/?depth=1'))

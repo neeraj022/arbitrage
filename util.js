@@ -1,4 +1,5 @@
 let curl = require('curlrequest');
+var axios = require('axios')
 const NodeCache = require( "node-cache" );
 const myCache = new NodeCache( { stdTTL: 1800, checkperiod: 120 } );
 
@@ -40,7 +41,7 @@ let utilMethods = {
         return new Promise((resolve, reject) => {
             koinexPrices = myCache.get( "koinexPrices" )
             if (koinexPrices) {
-              console.log('cache found')
+              console.log('koinex cache found')
               resolve (koinexPrices)
             } else {
               curl.request(options, function (err, data) {
@@ -52,7 +53,7 @@ let utilMethods = {
                   console.log(new Date(),"Koinex cloudflare expection");
                   reject(e)
                 }
-                console.log('setting cache')
+                console.log('setting koinex cache')
                 myCache.set("koinexPrices", prices)
                 resolve(prices)
               });
@@ -87,7 +88,24 @@ let utilMethods = {
                 resolve(data)
               });
         })
-      }
+      },
+      fetchCurrencyRates () {
+        return new Promise((resolve, reject) => {
+        let currencyPrices = myCache.get( "currencyPrices" )
+        if (currencyPrices) {
+          console.log('currency price cache found')
+          resolve (currencyPrices)
+        } else {
+          axios.get('https://api.fixer.io/latest').then(response => {
+            console.log('setting currency price cache')
+            myCache.set("currencyPrices", response.data)
+            resolve(response.data)
+          }, error => {
+            reject (error)
+          })
+        }
+    })
+  }
 }
 
 
