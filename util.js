@@ -2,6 +2,8 @@ let curl = require('curlrequest');
 var axios = require('axios')
 const NodeCache = require( "node-cache" );
 const myCache = new NodeCache( { stdTTL: 1800, checkperiod: 120 } );
+var MongoClient = require('mongodb').MongoClient;
+let config = require('./config')
 
 let utilMethods = {
     to2DecimalPlaces (value) {
@@ -41,23 +43,42 @@ let utilMethods = {
         return new Promise((resolve, reject) => {
             koinexPrices = myCache.get( "koinexPrices" )
             if (koinexPrices) {
-              console.log('koinex cache found')
+              //console.log('cache found', koinexPrices)
               resolve (koinexPrices)
             } else {
-              curl.request(options, function (err, data) {
-                let prices = {}
-                try {
-                  prices =JSON.parse(data).prices;
-                }
-                catch(e) {
-                  console.log(new Date(),"Koinex cloudflare expection");
-                  reject(e)
-                }
-                console.log('setting koinex cache')
-                myCache.set("koinexPrices", prices)
-                resolve(prices)
-              });
-            }
+            let exceptionOccured = false
+            // Connect to the db
+            MongoClient.connect(config.MONGO_HOST, function (err, client) {
+              const col = client.db(config.DB_NAME).collection('koinex');
+
+              col.find().sort({ _id : -1 }).limit(1).toArray((err, dbprices) => {
+                //console.log(dbprices)
+
+                curl.request(options, function (err, data) {
+                  
+                                  let prices = {}
+                                  try {
+                                    prices = JSON.parse(data).prices;
+                                  }
+                                  catch(e) {
+                                    console.log(new Date(),"Koinex cloudflare expection");
+                                    exceptionOccured = true
+                                    prices = dbprices
+                                  }
+                  
+                  
+                                  //myCache.set("koinexPrices", prices)
+                                  if (!exceptionOccured) {
+                                    col.insert(prices)
+                                  }
+                                  myCache.set("koinexPrices", prices)
+                                  resolve(prices)
+                                });
+
+              })
+                          
+            });
+          }
         })
       },
     fetchCoinDeltaRates() {

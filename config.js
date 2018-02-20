@@ -15,7 +15,9 @@ let config = {
     TWILIO_ACCOUNT_SID   : process.env.TWILIO_ACCOUNT_SID,
     TWILIO_AUTH_TOKEN : process.env.TWILIO_AUTH_TOKEN,
     TWILIO_PHONE_NUMBER : process.env.TWILIO_PHONE_NUMBER,
-    CELL_PHONE_NUMBER : ['+919989037913', '+918085601406']
+    CELL_PHONE_NUMBER : ['+919989037913', '+918085601406'],
+    MONGO_HOST: "mongodb://localhost:27017",
+    DB_NAME: "MY_DB"
 }
 
 module.exports = config
