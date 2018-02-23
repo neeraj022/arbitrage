@@ -343,14 +343,12 @@ router.get("/initialDifferenceData", (req, res)=> {
    || 
   req.socket.remoteAddress ||
   (req.connection.socket ? req.connection.socket.remoteAddress : null);
-  console.log('reqeust ip is', ip)
 
   //logging request ip detection
   axios.get(`https://tools.keycdn.com/geo.json?host=${ip}`).then(ipdetectResponse => {
-    console.log(ipdetectResponse.data)
     MongoClient.connect(config.MONGO_HOST, function (err, client) {
       const col = client.db(config.DB_NAME).collection('viewlocations');
-      col.insert({date: new Date(), data: ipdetectResponse.data})
+      col.insert({date: new Date(), data: ipdetectResponse.data.data})
     })
   })
 
