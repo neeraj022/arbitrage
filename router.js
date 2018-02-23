@@ -6,6 +6,7 @@ let config = require('./config')
 let sms = require('./sms')
 let nodemailer = require('./nodemailer')
 let util = require('./util')
+var MongoClient = require('mongodb').MongoClient;
 
 router.get("/", (req, res) => {
   res.send('Welcome to landing page')
@@ -338,6 +339,22 @@ router.get("/favourablecextransfer", (req, res)=> {
 
 
 router.get("/initialDifferenceData", (req, res)=> {
+  var ip = req.headers['x-forwarded-for'] || 
+  req.connection.remoteAddress || 
+  req.socket.remoteAddress ||
+  (req.connection.socket ? req.connection.socket.remoteAddress : null);
+  console.log('reqeust ip is', ip)
+
+  //logging request ip detection
+  axios.get(`https://tools.keycdn.com/geo.json?host=${ip}`).then(ipdetectResponse => {
+    console.log(ipdetectResponse)
+    MongoClient.connect(config.MONGO_HOST, function (err, client) {
+      const col = client.db(config.DB_NAME).collection('viewlocations');
+      col.insert({date: new Date(), data: ipdetectResponse.data})
+    })
+  })
+
+
   let promiseArray = []
   //promiseArray.push(axios.get('https://api.fixer.io/latest'))
   promiseArray.push(util.fetchCurrencyRates())
