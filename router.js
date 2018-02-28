@@ -248,7 +248,6 @@ router.get("/alldiff", (req, res)=> {
       finalResponse['BCH']['profit'] = finalResponse['BCH']['koinexRevenue'] - inputInr
 
       calculateMaximumProfit(finalResponse)
-      console.log(new Date(), 'maximum profit is' , finalResponse.maxProfitCoin, finalResponse.maxProfit)
       if (finalResponse.maxProfit>=config.maxProfitThreshold) {
         //sms.sendSms('MAXIMUM Profit on '+ finalResponse.maxProfitCoin + ' '+ finalResponse.maxProfit)
         nodemailer.sendEmailAll(finalResponse)
@@ -326,7 +325,6 @@ router.get("/favourablecextransfer", (req, res)=> {
       finalResponse['BCH']['amountOnCex'] = finalResponse['BCH']['coinFinalAmount'] * bchCexPrice
 
       calculateMaxCexAmount(finalResponse)
-      console.log(new Date(), 'maximum amount is' , finalResponse.maxAmountCexCoin, finalResponse.maxAmountCex,'bank transfer price is', finalResponse['cexInputEur'])
       if (finalResponse.maxAmountCex>=finalResponse['cexInputEur']) {
         //sms.sendSms('MAXIMUM Profit on '+ finalResponse.maxProfitCoin + ' '+ finalResponse.maxProfit)
         nodemailer.sendEmailReverseTransfer(finalResponse)
@@ -400,7 +398,13 @@ router.get("/initialDifferenceData", (req, res)=> {
       finalResponse["bchTicker"] = bchTicker
       finalResponse["koinexTicker"] = koinexTicker
 
-      res.send(finalResponse)
+      MongoClient.connect(config.MONGO_HOST, function (err, client) {
+        const col = client.db(config.DB_NAME).collection('viewlocations');
+        col.count().then(countResponse => {
+          finalResponse["viewCount"] = countResponse
+          res.send(finalResponse)
+        })
+      })
   }, error => {
       res.send(error)
   })

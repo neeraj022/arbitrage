@@ -48,7 +48,7 @@ io.on('connection', function(ws) {
         ticker.ethTicker(ws)
         ticker.xrpTicker(ws)
         ticker.bchTicker(ws)
-    }, 200000)
+    }, 10000)
 
     setInterval (() => {
         ticker.koinexTicker(ws)
